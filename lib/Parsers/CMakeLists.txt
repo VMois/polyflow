@@ -1,0 +1,1 @@
+add_library(SnakemakeParser SnakemakeParser.cpp)

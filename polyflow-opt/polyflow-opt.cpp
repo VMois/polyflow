@@ -10,8 +10,19 @@
 
 #include "PolyFlow/PolyFlowOps.h"
 #include "PolyFlow/PolyFlowDialect.h"
+#include "Parsers/SnakemakeParser.hpp"
 
 int main() {
+
+  std::string filename = "example_workflow.snakefile";
+  std::ifstream file(filename);
+  if (!file) {
+      throw std::runtime_error("Cannot open file: " + filename);
+  }
+  SnakemakeParser parser(file);
+  parser.parse();
+  parser.print_tree();
+
   mlir::MLIRContext context;
 
   context.getOrLoadDialect<polyflow::PolyFlowDialect>();

@@ -20,6 +20,7 @@ set(LIBS
         MLIRTargetLLVMIRExport
         MLIRTransforms
         MLIROptLib
+        SnakemakeParser
         )
 add_llvm_executable(polyflow-opt polyflow-opt.cpp)
 
