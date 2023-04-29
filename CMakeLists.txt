@@ -15,6 +15,8 @@ endif()
 
 project(mlir-polyflow LANGUAGES CXX C)
 
+add_compile_options(-fexceptions)
+
 set(CMAKE_CXX_STANDARD 17 CACHE STRING "C++ standard to conform to")
 
 find_package(MLIR REQUIRED CONFIG)
