@@ -12,13 +12,9 @@ set(LIBS
         MLIRLLVMCommonConversion
         MLIRLLVMToLLVMIRTranslation
         MLIRMemRefDialect
-        MLIRLLVMDialect
         MLIRParser
-        MLIRPass
         MLIRSideEffectInterfaces
         MLIRSupport
-        MLIRTargetLLVMIRExport
-        MLIRTransforms
         MLIROptLib
         SnakemakeParser
         )
