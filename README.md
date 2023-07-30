@@ -1,6 +1,10 @@
-# PolyFlow (WIP)
+# PolyFlow
 
-An **experimental** MLIR-based compiler for different workflow languages like Snakemake, etc.
+An **experimental** MLIR-based compiler and execution engine for workflow languages like Snakemake, etc.
+
+## Motivation
+
+While working on [REANA](https://github.com/reanahub/reana) project at CERN, I noticed that each workflow language has its execution engine: one for local computer, one for Kubernetes, etc. This created problems where we would spend time dealing with different execution engine differences. In my humble opinion, we can do better by having a similar approach that LLVM project took with programming languages - a unified compiler for workflow languages that can translate them to a common representation and then execute a common representation on different execution engines. In this way, we can separate language semantics from the execution engine.
 
 ## Building
 
