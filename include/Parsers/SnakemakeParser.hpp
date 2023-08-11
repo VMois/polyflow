@@ -4,6 +4,16 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include "mlir/IR/Builders.h"
+#include "mlir/IR/BuiltinOps.h"
+#include "mlir/IR/MLIRContext.h"
+
+#include "PolyFlow/PolyFlowDialect.h"
+#include "PolyFlow/PolyFlowTypes.h"
+#include "PolyFlow/PolyFlowOps.h"
+
+
+namespace snakemake {
 
 enum TokenType {
     RULE,
@@ -26,9 +36,9 @@ struct Token {
     size_t column;
 };
 
-class SnakemakeLexer {
+class Lexer {
     public:
-        SnakemakeLexer(std::istream& input) : input_(input) {}
+        Lexer(std::istream& input) : input_(input) {}
         Token nextToken();
         bool eof() const { return input_.eof(); }
     
@@ -49,45 +59,63 @@ class SnakemakeLexer {
         Token readIdentifierOrKeyword();
 };
 
-class TreeNode {
+class BaseAST {
 public:
-    std::string name;
-    std::vector<std::shared_ptr<TreeNode>> children;
+    enum ASTKind {
+        Rule,
+    };
 
-    TreeNode(const std::string &name) : name(name) {}
+    BaseAST(ASTKind kind, Token location)
+        : kind(kind), location(std::move(location)) {}
+    virtual ~BaseAST() = default;
 
-    void add_child(const std::shared_ptr<TreeNode> &child) {
-        children.push_back(child);
-    }
+    ASTKind getKind() const { return kind; }
 
-    void print(int indent = 0) {
-        for (int i = 0; i < indent; ++i) {
-            std::cout << "  ";
-        }
-        std::cout << name << std::endl;
-        for (const auto &child : children) {
-            child->print(indent + 1);
-        }
-    }
+    const Token &loc() { return location; }
+
+private:
+    const ASTKind kind;
+    Token location;
 };
 
-class SnakemakeParser {
+class RuleAST : public BaseAST {
+    public:
+        std::string name;
+        std::vector<std::string> inputs;
+        std::vector<std::string> outputs;
+        std::string command;
+
+        RuleAST(Token loc,
+                std::string name,
+                std::vector<std::string> inputs,
+                std::vector<std::string> outputs,
+                std::string command)
+            : BaseAST(Rule, std::move(loc)), name(std::move(name)), inputs(std::move(inputs)), outputs(std::move(outputs)), command(std::move(command)) {}
+
+        static bool classof(const BaseAST *c) { return c->getKind() == Rule; }
+};
+
+class ModuleAST {
+    public:
+        std::vector<std::unique_ptr<RuleAST>> rules;
+        ModuleAST(std::vector<std::unique_ptr<RuleAST>> rules)
+            : rules(std::move(rules)) {}
+};
+
+void dumpAST(ModuleAST &);
+
+class Parser {
 public:
-    SnakemakeParser(std::istream& input): lexer_(input) {}
+    Parser(std::istream& input): lexer_(input) {}
 
-    void parse() {
+    std::unique_ptr<ModuleAST> parseModule() {
         advance();
-        snakemake();
-    }
-
-    void print_tree() {
-        root->print();
+        return snakemake();
     }
 
 private:
-    SnakemakeLexer lexer_;
+    Lexer lexer_;
     Token lookahead;
-    std::shared_ptr<TreeNode> root = std::make_shared<TreeNode>("snakemake");
 
     void advance();
 
@@ -95,11 +123,25 @@ private:
 
     void match(const TokenType tokenType);
 
-    std::shared_ptr<TreeNode> snakemake();
-    std::shared_ptr<TreeNode> rule();
+    std::unique_ptr<ModuleAST> snakemake();
+    std::unique_ptr<RuleAST> rule();
 
-    std::shared_ptr<TreeNode> input_rule();
-    std::shared_ptr<TreeNode> output_rule();
-    std::shared_ptr<TreeNode> shell_rule();
-    std::shared_ptr<TreeNode> parameter_list();
+    std::vector<std::string> input_rule();
+    std::vector<std::string> output_rule();
+    std::string shell_rule();
+    std::vector<std::string> parameter_list();
 };
+
+class MLIRGen {
+    public:
+        MLIRGen(mlir::MLIRContext &context) : builder(&context) {}
+        mlir::ModuleOp mlirGen(ModuleAST &);
+    
+    private:
+        mlir::ModuleOp theModule;
+        mlir::OpBuilder builder;
+
+        polyflow::StepOp mlirGen(RuleAST &);
+};
+
+} // namespace snakemake

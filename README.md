@@ -11,7 +11,9 @@ While working on [REANA](https://github.com/reanahub/reana) project at CERN, I n
 Please make sure to build LLVM and MLIR projects first according to [the instruction](https://mlir.llvm.org/getting_started/). For this particular project those commands were used to build LLVM and MLIR project (provided as an example):
 
 ```sh
-cmake -G Ninja ../llvm \
+$ mkdir build && cd build
+
+$ cmake -G Ninja ../llvm \
    -DLLVM_ENABLE_PROJECTS=mlir \
    -DLLVM_BUILD_EXAMPLES=ON \
    -DLLVM_TARGETS_TO_BUILD="host" \
@@ -23,7 +25,8 @@ cmake -G Ninja ../llvm \
    -DMLIR_INCLUDE_INTEGRATION_TESTS=ON \
    -DLLVM_INSTALL_UTILS=ON \
    -DLLVM_INCLUDE_TOOLS=ON
-cmake --build . --target check-mlir
+
+$ cmake --build . --target check-mlir
 ```
 
 To build PolyFlow, run the following commands:
