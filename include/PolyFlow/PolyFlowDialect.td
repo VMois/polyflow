@@ -15,6 +15,7 @@ def PolyFlow_Dialect : Dialect {
     }];
     let cppNamespace = "::polyflow";
     let hasConstantMaterializer = 0;
+    let useDefaultTypePrinterParser = 1;
 }
 
 //===----------------------------------------------------------------------===//

@@ -8,36 +8,47 @@
 #include "mlir/InitAllPasses.h"
 #include "llvm/Support/raw_ostream.h"
 
-#include "PolyFlow/PolyFlowOps.h"
-#include "PolyFlow/PolyFlowDialect.h"
 #include "Parsers/SnakemakeParser.hpp"
 
 int main() {
 
-  std::string filename = "example_workflow.snakefile";
+  std::string filename = "../example_workflow.snakefile";
   std::ifstream file(filename);
   if (!file) {
       throw std::runtime_error("Cannot open file: " + filename);
   }
-  SnakemakeParser parser(file);
-  parser.parse();
-  parser.print_tree();
+  snakemake::Parser parser(file);
+  std::unique_ptr<snakemake::ModuleAST> snakemakeModule = parser.parseModule();
+  //snakemake::dumpAST(*snakemakeModule);
 
   mlir::MLIRContext context;
-
   context.getOrLoadDialect<polyflow::PolyFlowDialect>();
 
-  mlir::OpBuilder builder(&context);
-  mlir::ModuleOp module = mlir::ModuleOp::create(builder.getUnknownLoc());
+  mlir::ModuleOp m = snakemake::MLIRGen(context).mlirGen(*snakemakeModule);
+  m->dump();
 
-  mlir::OpBuilder opBuilder(module.getBodyRegion());
+  //mlir::OpBuilder builder(&context);
+  //mlir::ModuleOp module = mlir::ModuleOp::create(builder.getUnknownLoc());
 
-  // Create the ConstantOp with a value of 42.0
-  auto dataType = opBuilder.getF64Type();
-  auto dataAttribute = mlir::FloatAttr::get(dataType, 42.0);
-  polyflow::ConstantOp constantOp = opBuilder.create<polyflow::ConstantOp>(opBuilder.getUnknownLoc(), dataType, dataAttribute);
+  // mlir::OpBuilder opBuilder(module.getBodyRegion());
 
-  module.print(llvm::outs());
+  // std::vector<std::string> strings = {"string1", "string2", "string3"};
+
+  // std::vector<mlir::Attribute> stringAttrs;
+  // for (int i = 0; i < 3; i++) {
+  //   mlir::Attribute strAttr = mlir::StringAttr::get(&context, strings[i]);
+  //   stringAttrs.push_back(strAttr);
+  // }
+
+  // mlir::ArrayAttr inputs = mlir::ArrayAttr::get(&context, stringAttrs);
+
+  // polyflow::StepOp stepOp = opBuilder.create<polyflow::StepOp>(
+  //   opBuilder.getUnknownLoc(), 
+  //   llvm::StringRef("task1"), 
+  //   inputs,
+  //   inputs,
+  //   llvm::StringRef("echo hello world") 
+  // );
 
   return 0;
 }
